@@ -1,0 +1,25 @@
+Request OTP for login, 'sent via email'
+---
+tags:
+  - auth
+parameters:
+  - name: email
+    in: formData
+    type: string
+    required: true
+responses:
+  200:
+    description: reuest successful
+    schema:
+      type: object
+      example: {
+              msg: OTP sent to food@mail.com, verify and log in
+      }
+  403:
+    description: reuest unsuccessful
+    schema:
+      type: object
+      example: {
+              error: 403,
+              msg: action forbidden
+      }

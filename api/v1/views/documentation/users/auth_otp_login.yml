@@ -1,0 +1,31 @@
+Log in with the requested OTP
+---
+tags:
+  - auth
+parameters:
+  - name: email
+    in: formData
+    type: string
+    required: true
+  - name: otp
+    in: formData
+    type: string
+    required: true
+responses:
+  200:
+    description: reuest successful
+    schema:
+      type: object
+      example: {
+              msg: loggin successful,
+              access_token: jshsggas55a5aa25aa5jaja222'a22a22a2a22
+      }
+  401:
+    description: reuest unsuccessful
+    schema:
+      type: object
+      example: {
+              error: 401,
+              msg: Invalid OTP
+      }
+

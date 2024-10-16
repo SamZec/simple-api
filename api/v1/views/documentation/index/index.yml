@@ -1,0 +1,14 @@
+Public access endpoint - public data
+---
+tags:
+  - public-data
+responses:
+  200:
+    description: request successful
+    schema:
+      type: object
+      example: {
+        project: Authorization and Authentication System,
+        assigner: Ideation Axis,
+        assignee: Affum Samuel
+      }

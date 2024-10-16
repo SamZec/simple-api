@@ -1,59 +1,63 @@
-#!/usr/bin/env python3
-""" User module
-"""
-import hashlib
+#!/bin/python3
+"""Users and Admins object module"""
 from models.base import Base
 
 
 class User(Base):
-    """ User class
-    """
-
-    def __init__(self, *args: list, **kwargs: dict):
+    "Users class object"
+    def __init__(self, *args, **kwargs):
         """ Initialize a User instance
         """
         super().__init__(*args, **kwargs)
-        self.email = kwargs.get('email')
-        self._password = kwargs.get('_password')
         self.first_name = kwargs.get('first_name')
         self.last_name = kwargs.get('last_name')
+        self.email = kwargs.get('email')
+        self.password = kwargs.get('password')
+        self.session_id = kwargs.get('session_id')
+        self.reset_token = kwargs.get('reset_token')
 
-    @property
-    def password(self) -> str:
-        """ Getter of the password
-        """
-        return self._password
 
-    @password.setter
-    def password(self, pwd: str):
-        """ Setter of a new password: encrypt in SHA256
-        """
-        if pwd is None or type(pwd) is not str:
-            self._password = None
-        else:
-            self._password = hashlib.sha256(pwd.encode()).hexdigest().lower()
-
-    def is_valid_password(self, pwd: str) -> bool:
-        """ Validate a password
-        """
-        if pwd is None or type(pwd) is not str:
+    def has_role(self, role=None):
+        """check if a user has the assinged role"""
+        set_role = SetRole.search({'user_id': self.id})
+        if not set_role:
             return False
-        if self.password is None:
-            return False
-        pwd_e = pwd.encode()
-        return hashlib.sha256(pwd_e).hexdigest().lower() == self.password
+        roles = Role.search({'name': role})
+        if roles and set_role:
+            return any(roles[0].id == i.role_id for i in set_role)
+        #if set_role:
+        #    return True
+        return False
 
-    def display_name(self) -> str:
-        """ Display User name based on email/first_name/last_name
+    def unset_role(self, setrole_id):
+        """remove a user from a role"""
         """
-        if self.email is None and self.first_name is None \
-                and self.last_name is None:
-            return ""
-        if self.first_name is None and self.last_name is None:
-            return "{}".format(self.email)
-        if self.last_name is None:
-            return "{}".format(self.first_name)
-        if self.first_name is None:
-            return "{}".format(self.last_name)
-        else:
-            return "{} {}".format(self.first_name, self.last_name)
+        get_role = Role.objects(name=role).first()
+        if self.has_role(role) and get_role:
+            obj = SetRole.objects(users=self).filter(roles=get_role).first()
+            obj.delete()
+            return True
+        """
+        setrole = SetRole.get(id=setrole_id)
+        if setrole:
+            setrole.remove()
+            return True
+        return False
+
+
+class Role(Base):
+    """Roles objects class"""
+    def __init__(self, *args, **kwargs):
+        """Intantiate Role object"""
+        super().__init__(*args, **kwargs)
+        self.name = kwargs.get('name')
+
+
+class SetRole(Base):
+    """Assigns a user to a role"""
+    def __init__(self, *args, **kwargs):
+        """Intantiate setrole object"""
+        super().__init__(*args, **kwargs)
+        #self.name = kwargs.get('name')
+        self.role_id = kwargs.get('role_id')
+        self.user_id =  kwargs.get('user_id')

@@ -1,122 +1,249 @@
-#!/usr/bin/env python3
-""" Module of Users views
-"""
+#!/bin/python3
+"""Users view module"""
 from api.v1.views import app_views
-from flask import abort, jsonify, request
-from models.users import User
+from flasgger.utils import swag_from
+from models.auth import auth_role, Auth
+from flask_jwt_extended import jwt_required
+from models.users import User, Role, SetRole
+from flask import jsonify, abort, request, session
+from flask_jwt_extended import create_access_token, get_jwt, get_jwt_identity
 
 
-@app_views.route('/users', methods=['GET'], strict_slashes=False)
-def view_all_users() -> str:
-    """ GET /api/v1/users
-    Return:
-      - list of all User objects JSON represented
-    """
-    all_users = [user.to_json() for user in User.all()]
-    return jsonify(all_users)
+auth = Auth()
 
-
-@app_views.route('/users/<user_id>', methods=['GET'], strict_slashes=False)
-def view_one_user(user_id: str = None) -> str:
-    """ GET /api/v1/users/:id
-    Path parameter:
-      - User ID
-    Return:
-      - User object JSON represented
-      - 404 if the User ID doesn't exist
-    """
-    if user_id is None:
-        abort(404)
-    user = User.get(user_id)
-    if user is None:
-        abort(404)
-    return jsonify(user.to_json())
-
-
-@app_views.route('/users/<user_id>', methods=['DELETE'], strict_slashes=False)
-def delete_user(user_id: str = None) -> str:
-    """ DELETE /api/v1/users/:id
-    Path parameter:
-      - User ID
-    Return:
-      - empty JSON is the User has been correctly deleted
-      - 404 if the User ID doesn't exist
-    """
-    if user_id is None:
-        abort(404)
-    user = User.get(user_id)
-    if user is None:
-        abort(404)
-    user.remove()
-    return jsonify({}), 200
-
-
-@app_views.route('/users', methods=['POST'], strict_slashes=False)
-def create_user() -> str:
-    """ POST /api/v1/users/
-    JSON body:
-      - email
-      - password
-      - last_name (optional)
-      - first_name (optional)
-    Return:
-      - User object JSON represented
-      - 400 if can't create the new User
-    """
-    rj = None
-    error_msg = None
+@app_views.route('/auth/register', methods=['POST'], strict_slashes=False)
+@swag_from('documentation/users/auth_register.yml')
+def register_user():
+    """Create new user"""
+    data = {}
+    if request.is_json:
+        data = request.get_json()
+    first_name = data.get('first_name', request.form.get('first_name'))
+    if not first_name:
+        abort(400, 'first name missing')
+    data['first_name'] = first_name
+    last_name = data.get('last_name', request.form.get('last_name'))
+    if not last_name:
+        abort(400, 'lasst name missing')
+    data['last_name'] = last_name
+    email = data.get('email', request.form.get('email'))
+    if not email:
+        abort(400, 'email missing')
+    data['email'] = email
+    password = data.get('password', request.form.get('password'))
+    if not password:
+        abort(400, 'password missing')
+    data['password'] = password
     try:
-        rj = request.get_json()
+        user = auth.register_user(**data)
+        return jsonify({
+            'msg': f'user {user.email} created'}), 201
     except Exception as e:
-        rj = None
-    if rj is None:
-        error_msg = "Wrong format"
-    if error_msg is None and rj.get("email", "") == "":
-        error_msg = "email missing"
-    if error_msg is None and rj.get("password", "") == "":
-        error_msg = "password missing"
-    if error_msg is None:
+        abort(500, str(e))
+
+
+@app_views.route('auth/login', methods=['POST'], strict_slashes=False)
+@swag_from('documentation/users/auth_login.yml')
+def auth_login():
+    """log authorized users in"""
+    data = {}
+    if request.is_json:
+        data = request.get_json()
+    email = data.get('email', request.form.get('email'))
+    if not email:
+        abort(400, 'email missing')
+    password = data.get('password', request.form.get('password'))
+    if not password:
+        abort(400, 'password missing')
+    try:
+        auth_user = auth.valid_login(email, password)
+        if auth_user:
+            session_id = auth.create_session(email)
+            user = auth.get_user_from_session_id(session_id)
+            identity = {
+                    'email': user.email,
+                    'first_name': user.first_name,
+                    'last_name': user.last_name,
+                    'session_id': user.session_id
+                    }
+            token = create_access_token(identity=identity)
+            return jsonify({
+                'msg': 'loggin successful',
+                'access_token': token}), 200
+    except Exception as e:
+        abort(500, str(e))
+    return abort(401, 'unauthorized user')
+
+
+@app_views.route('/auth/otp-request', methods=['POST'], strict_slashes=False)
+@swag_from('documentation/users/auth_otp_request.yml')
+def otp_request():
+    """OTP log in request"""
+    data = {}
+    if request.is_json:
+        data = request.get_json()
+    email = data.get('email', request.form.get('email'))
+    if not email:
+        abort(400, 'email missing')
+    user = User.search({'email': email})
+    if not user:
+        abort(403, 'action forbidden')
+    user = user[0]
+    if auth.email_verification(email):
         try:
-            user = User()
-            user.email = rj.get("email")
-            user.password = rj.get("password")
-            user.first_name = rj.get("first_name")
-            user.last_name = rj.get("last_name")
-            user.save()
-            return jsonify(user.to_json()), 201
+            OTP = auth.send_otp_code(email)
+            session['OTP'] = OTP
+            return jsonify({
+                'msg': f'OTP sent to {email}, verify and log in'}), 200
         except Exception as e:
-            error_msg = "Can't create User: {}".format(e)
-    return jsonify({'error': error_msg}), 400
+            abort(500, str(e))
+    return jsonify({
+        'msg': f'Invalid email {email}'}), 400
 
 
-@app_views.route('/users/<user_id>', methods=['PUT'], strict_slashes=False)
-def update_user(user_id: str = None) -> str:
-    """ PUT /api/v1/users/:id
-    Path parameter:
-      - User ID
-    JSON body:
-      - last_name (optional)
-      - first_name (optional)
-    Return:
-      - User object JSON represented
-      - 404 if the User ID doesn't exist
-      - 400 if can't update the User
-    """
-    if user_id is None:
-        abort(404)
-    user = User.get(user_id)
-    if user is None:
-        abort(404)
-    rj = None
+@app_views.route('/auth/otp-login', methods=['POST'], strict_slashes=False)
+@swag_from('documentation/users/auth_otp_login.yml')
+def otp_login():
+    """logs user in with requested OTP"""
+    data = {}
+    if request.is_json:
+        data = request.get_json()
+    email = data.get('email', request.form.get('email'))
+    if not email:
+        abort(400, 'email missing')
+    OTP = data.get('otp', request.form.get('otp'))
+    if not OTP:
+        abort(400, 'OTP missing')
+    if session['OTP'] == int(OTP):
+        try:
+            session_id = auth.create_session(email)
+            user = auth.get_user_from_session_id(session_id)
+            identity = {
+                    'email': user.email,
+                    'first_name': user.first_name,
+                    'last_name': user.last_name,
+                    'session_id': user.session_id
+                    }
+            token = create_access_token(identity=identity)
+            session['OTP'] = None
+            return jsonify({
+                'msg': 'loggin successful',
+                'access_token': token}), 200
+        except Exception as e:
+            abort(500, str(e))
+    return abort(401, 'Invalid OTP')
+
+
+@app_views.route('/auth/assign-role', methods=['POST'], strict_slashes=False)
+@jwt_required()
+@auth_role('Admin')
+@swag_from('documentation/users/auth_assign_role.yml')
+def assign_role():
+    """assign user to a role"""
+    data = {}
+    if request.is_json:
+        data = request.get_json()
+    role = data.get('role', request.form.get('role'))
+    if not role:
+        abort(400, 'role missing')
+    data['role'] = role
+    user_id = data.get('user_id', request.form.get('user_id'))
+    if not user_id:
+        abort(400, 'user id missing')
+    data['user_id'] = user_id
+    user = User.get(id=user_id)
+    if not user:
+        abort(404, f'user {user_id} not found')
+    get_role = Role.search({'name': role.capitalize()})
+    if get_role:
+        get_role = get_role[0]
+        set_role = SetRole.search({'role_id': get_role.id})
+        if set_role and set_role[0].user_id == user.id:
+            abort(400, f'role {get_role.name} exists on {user_id}')
+    else:
+        try:
+            get_role = Role(name=role.capitalize())
+            get_role.save()
+        except Exception as e:
+            abort(500, str(e))
     try:
-        rj = request.get_json()
+        set_role = SetRole(role_id=get_role.id, user_id=user_id)
+        set_role.save()
     except Exception as e:
-        rj = None
-    if rj is None:
-        return jsonify({'error': "Wrong format"}), 400
-    if rj.get('first_name') is not None:
-        user.first_name = rj.get('first_name')
-    if rj.get('last_name') is not None:
-        user.last_name = rj.get('last_name')
-    user.save()
-    return jsonify(user.to_json()), 200
+        abort(500, str(e))
+    return jsonify({
+        'msg': f'Role {get_role.name} assigned to {user_id}'}), 201
+
+
+@app_views.route('/profile', strict_slashes=False)
+@jwt_required()
+@auth_role(['Admin', 'User'])
+@swag_from('documentation/users/profile.yml')
+def profile():
+    """user profile"""
+    session_id = get_jwt_identity().get('session_id')
+    user = auth.get_user_from_session_id(session_id)
+    if not user:
+        abort(401, 'unauthorized user')
+    user_json = user.to_json()
+    return jsonify({
+        'data': user_json,
+        'msg': 'user profile'}), 200
+
+
+@app_views.route('/profile', methods=['PUT'], strict_slashes=False)
+@jwt_required()
+@auth_role(['Admin', 'User'])
+@swag_from('documentation/users/update_profile.yml')
+def update_profile():
+    """user profile"""
+    session_id = get_jwt_identity().get('session_id')
+    user = auth.get_user_from_session_id(session_id)
+    if not user:
+        abort(401, 'unauthorized user')
+    if request.is_json:
+        data = request.get_json()
+    email = data.get('email', request.form.get('email'))
+    if email:
+        user.email = email
+    first_name = data.get('first_name', request.form.get('first_name'))
+    if first_name:
+        user.first_name = first_name
+    last_name = data.get('last_name', request.form.get('last_name'))
+    if last_name:
+        user.last_name = last_name
+    try:
+        user.update()
+    except Exception as e:
+        abort(500, str(e))
+    user_json = user.to_json()
+    del user_json['password']
+    return jsonify({
+        'data': user_json,
+        'msg': 'user update successful'}), 200
+
+
+@app_views.route('/users', strict_slashes=False)
+@jwt_required()
+@auth_role(['Admin'])
+@swag_from('documentation/users/users.yml')
+def get_users():
+    """all users"""
+    users = [i.to_json() for i in User.all()]
+    if not users:
+        abort(404, 'users not found')
+    return jsonify({
+        'data': users}), 200
+
+
+@app_views.route('/users/<id>', methods=['DELETE'], strict_slashes=False)
+@jwt_required()
+@auth_role(['Admin'])
+@swag_from('documentation/users/user.yml')
+def delete_user(id):
+    """remove user from data base"""
+    user = User.get(id=id)
+    if not user:
+        abort(404, 'user not found')
+    user.remove()
+    return {}, 200

@@ -1,0 +1,37 @@
+Get authenticated user profile
+---
+tags:
+  - profile
+parameters:
+  - name: Authorization
+    type: string
+    in: header
+    required: true
+    description: Bearer Token
+responses:
+  200:
+    description: request successful
+    schema:
+      type: object
+      example: {
+  "data": {
+    "created_at": "2024-10-14T19:08:31",
+    "email": "sam@mail.com",
+    "first_name": "Samuel",
+    "id": "e9710e00-8793-42ef-8ace-178a35fef08e",
+    "last_name": "Affum",
+    "password": "$2b$12$QVhX6kBf7ghLqayfgeuxXuZDMLUMjnVw2TMKDBidkE14d80jRBUfi",
+    "reset_token": null,
+    "session_id": "271139dc-5d47-42ce-987c-6c2420f629b3",
+    "updated_at": "2024-10-16T15:36:23"
+  },
+  "msg": "user profile"
+}
+  401:
+    description: request unsuccessful
+    schema:
+      type: object
+      example: {
+              error: 401,
+              msg: unauthorized user
+      }

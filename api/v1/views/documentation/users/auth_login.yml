@@ -1,0 +1,30 @@
+Log user in
+---
+tags:
+  - auth
+parameters:
+  - name: email
+    in: formData
+    type: string
+    required: true
+  - name: password
+    in: formData
+    type: string
+    required: true
+responses:
+  200:
+    description: request successful
+    schema:
+      type: object
+      example: {
+              msg: loggin successful,
+              access_token: askjauja555646343a46434a643a464axaxa4a2a.aclajclacla
+      }
+  401:
+    description: request unsuccessful
+    schema:
+      type: object
+      example: {
+              error: 401,
+              msg: unauthorized user
+      }

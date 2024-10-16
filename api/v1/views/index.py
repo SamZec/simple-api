@@ -1,26 +1,16 @@
-#!/usr/bin/env python3
-""" Module of Index views
-"""
-from flask import jsonify, abort
+#!/bin/python3
+"""Application Index module"""
+from flask import jsonify
 from api.v1.views import app_views
+from flasgger.utils import swag_from
 
 
-@app_views.route('/status', methods=['GET'], strict_slashes=False)
-def status() -> str:
-    """ GET /api/v1/status
-    Return:
-      - the status of the API
-    """
-    return jsonify({"status": "OK"})
-
-
-@app_views.route('/stats/', strict_slashes=False)
-def stats() -> str:
-    """ GET /api/v1/stats
-    Return:
-      - the number of each objects
-    """
-    from models.users import User
-    stats = {}
-    stats['users'] = User.count()
-    return jsonify(stats)
+@app_views.route('/public-data', strict_slashes=False)
+@swag_from('documentation/index/index.yml')
+def index():
+    """check app status"""
+    return jsonify({
+        'project': 'Authorization and Authentication System',
+        'assigner': 'Ideation Axis',
+        'assignee': 'Affum Samuel'
+        }), 200

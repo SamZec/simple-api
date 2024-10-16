@@ -1,0 +1,21 @@
+Third party login request 'facebook login implemetation'
+---
+tags:
+  - oauth2
+responses:
+  500:
+    description: request unsuccessful
+    schema:
+      type: object
+      example: {
+              error: 500,
+              msg: internal server error
+      }
+  200:
+    description: redirected to facebook login
+    schema:
+      type: object
+      example: {
+  "link": "https://www.facebook.com/v21.0/dialog/oauth?client_id=894829105947038&redirect_uri=http://localhost:4321/response&",
+  "msg": "use link to authorize log in"
+}

@@ -1,0 +1,35 @@
+Assign role to a user, 'Admin' only
+---
+tags:
+  - auth
+parameters:
+  - name: Authrization
+    in: header
+    type: string
+    required: true
+    description: Bearer Token
+  - name: user_id
+    in: formData
+    type: string
+    required: true
+  - name: role
+    in: formData
+    type: string
+    required: true
+responses:
+  200:
+    description: reuest successful
+    schema:
+      type: object
+      example: {
+              msg: Role Admin assigned to e55a55ggg5555s5555
+      }
+  401:
+    description: reuest unsuccessful
+    schema:
+      type: object
+      example: {
+              error: 401,
+              msg: unauthorized user
+      }
+

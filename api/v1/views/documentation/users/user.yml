@@ -1,0 +1,36 @@
+Remove user from database
+---
+tags:
+  - users
+parameters:
+  - name: Authorization
+    in: header
+    type: string
+    required: true
+    description: Bearer Token
+  - name: user_id
+    in: formData
+    required: true
+    type: string
+responses:
+  200:
+    description: request successful
+    schema:
+      type: object
+      example: {}
+  401:
+    description: request unsuccessful
+    schema:
+      type: object
+      example: {
+              error: 401,
+              msg: unauthorized user
+      }
+  404:
+    description: request unsuccessful
+    schema:
+      type: object
+      example: {
+              error: 404,
+              msg: user not found
+      }

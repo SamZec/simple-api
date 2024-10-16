@@ -1,0 +1,33 @@
+Update authenticated user profile
+---
+tags:
+        - profile
+parameters:
+        - name: Authorization
+          in: header
+          type: string
+          required: true
+          description: Bearer Token
+        - name: email
+          in: formdata
+          type: string
+        - name: first_name
+          in: formData
+          type: string
+        - name: last_name
+          in: formData
+          type: string
+responses:
+  200:
+    description: request successful
+    schema:
+      type: object
+      example: {}
+  401:
+          description: request unsuccessful
+          schema:
+                  type: object
+                  example: {
+                          error: 401,
+                          msg: unauthorized user
+                  }
