@@ -11,3 +11,4 @@ pyjwt[crypto]
 flask-jwt-extended
 python-decouple
 facebook-sdk
+Flask-Limiter
