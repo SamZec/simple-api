@@ -1,5 +1,6 @@
 #!/bin/python3
 """Oauth2 login module"""
+from api.v1 import limiter
 from decouple import config
 from api.v1.views import app_views
 from flasgger.utils import swag_from
@@ -14,6 +15,7 @@ ACCESS_TOKEN = config('FB_ACCESS_TOKEN')
 
 
 @app_views.route('/oauth2', strict_slashes=False)
+@limiter.limit('3/hour')
 @swag_from('documentation/oauht2/oauth2.yml')
 def oauth2():
     """Oauth2 third party login"""

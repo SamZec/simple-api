@@ -3,6 +3,7 @@
 from decouple import config
 from flask_cors import CORS
 from flasgger import Swagger
+from api.v1 import limiter
 from api.v1.views import app_views
 from models.token_blocklist import TokenBlocklist
 from datetime import timedelta, datetime, timezone
@@ -12,6 +13,7 @@ from flask import Flask, render_template, make_response, jsonify
 
 
 app = Flask(__name__)
+limiter.init_app(app)
 token_expiry = config('SESSION_DURATION')
 app.config['JSONIFY_PRETTYPRINT_REGULAR'] = True
 app.config['SECRET_KEY'] = config('SECRET_KEY')
@@ -81,6 +83,13 @@ def not_allowed(error):
     return jsonify({
         'error': 405,
         'msg': error.description}), 405
+
+@app.errorhandler(429)
+def not_allowed(error):
+    """429 error handler"""
+    return jsonify({
+        'error': 429,
+        'msg': error.description}), 429
 
 @app.errorhandler(500)
 def sever_error(error):

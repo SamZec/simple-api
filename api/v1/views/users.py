@@ -1,5 +1,6 @@
 #!/bin/python3
 """Users view module"""
+from api.v1 import limiter
 from api.v1.views import app_views
 from flasgger.utils import swag_from
 from models.auth import auth_role, Auth
@@ -43,6 +44,7 @@ def register_user():
 
 
 @app_views.route('auth/login', methods=['POST'], strict_slashes=False)
+@limiter.limit('3/hour')
 @swag_from('documentation/users/auth_login.yml')
 def auth_login():
     """log authorized users in"""
@@ -76,6 +78,7 @@ def auth_login():
 
 
 @app_views.route('/auth/otp-request', methods=['POST'], strict_slashes=False)
+@limiter.limit('3/hour')
 @swag_from('documentation/users/auth_otp_request.yml')
 def otp_request():
     """OTP log in request"""
@@ -102,6 +105,7 @@ def otp_request():
 
 
 @app_views.route('/auth/otp-login', methods=['POST'], strict_slashes=False)
+@limiter.limit('3/hour')
 @swag_from('documentation/users/auth_otp_login.yml')
 def otp_login():
     """logs user in with requested OTP"""
@@ -136,7 +140,7 @@ def otp_login():
 
 @app_views.route('/auth/assign-role', methods=['POST'], strict_slashes=False)
 @jwt_required()
-@auth_role('Admin')
+#@auth_role('Admin')
 @swag_from('documentation/users/auth_assign_role.yml')
 def assign_role():
     """assign user to a role"""
