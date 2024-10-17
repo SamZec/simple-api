@@ -1,6 +1,6 @@
 # Simple API
 
-Simple HTTP API for playing with `User` model.
+Simple HTTP API for playing with `User` model with authentication, authorization and Oauth2 implementation.
 
 
 ## Files
@@ -8,13 +8,16 @@ Simple HTTP API for playing with `User` model.
 ### `models/`
 
 - `base.py`: base of all models of the API - handle serialization to file
-- `user.py`: user model
+- `users.py`: user model
+- `Role.py`: role model
+- `SetRole.py`: set role model
 
 ### `api/v1`
 
 - `app.py`: entry point of the API
-- `views/index.py`: basic endpoints of the API: `/status` and `/stats`
+- `views/index.py`: basic endpoints of the API: `/public-data`
 - `views/users.py`: all users endpoints
+- `views/oauth2.py: third party log in
 
 
 ## Setup
@@ -33,10 +36,10 @@ $ API_HOST=0.0.0.0 API_PORT=5000 python3 -m api.v1.app
 
 ## Routes
 
-- `GET /api/v1/status`: returns the status of the API
-- `GET /api/v1/stats`: returns some stats of the API
-- `GET /api/v1/users`: returns the list of users
-- `GET /api/v1/users/:id`: returns an user based on the ID
-- `DELETE /api/v1/users/:id`: deletes an user based on the ID
-- `POST /api/v1/users`: creates a new user (JSON parameters: `email`, `password`, `last_name` (optional) and `first_name` (optional))
-- `PUT /api/v1/users/:id`: updates an user based on the ID (JSON parameters: `last_name` and `first_name`)
+- `POST /auth/register`: Register a new user.
+- `POST /auth/login`: Authenticate a user and return a JWT.
+- `POST /auth/assign-role`: Assign a role to a user (admin-only).
+- `GET /profile`: Retrieve the authenticated user’s profile (accessible to authenticated users).
+- `PUT /profile`: Update the authenticated user’s profile (authenticated users only).
+- `DELETE /user/:id`: Delete a user by ID (admin-only).
+- `GET /public-data`: Retrieve data accessible to all users, including guests.
