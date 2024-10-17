@@ -108,10 +108,10 @@ Swagger(app)
 
 if __name__ == "__main__":
     """ Main Function """
-    host = config('DB_API_HOST', default=None)
-    port = config('DB_API_PORT', default=None)
-    if not host:
+    API_HOST = config('DB_API_HOST', default=None)
+    API_PORT = config('DB_API_PORT', default=None)
+    if not API_HOST:
         host = '0.0.0.0'
-    if not port:
+    if not API_PORT:
         port = '5000'
     app.run(threaded=False, use_reloader=True)

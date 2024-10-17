@@ -140,7 +140,7 @@ def otp_login():
 
 @app_views.route('/auth/assign-role', methods=['POST'], strict_slashes=False)
 @jwt_required()
-#@auth_role('Admin')
+@auth_role('Admin')
 @swag_from('documentation/users/auth_assign_role.yml')
 def assign_role():
     """assign user to a role"""
@@ -229,15 +229,16 @@ def update_profile():
 
 @app_views.route('/users', strict_slashes=False)
 @jwt_required()
-#@auth_role(['Admin'])
+@auth_role(['Admin'])
 @swag_from('documentation/users/users.yml')
 def get_users():
     """all users"""
-    users = [i.to_json() for i in User.all()]
-    if not users:
+    try:
+        users = [i.to_json() for i in User.all()]
+        return jsonify({
+            'data': users}), 200
+    except Exception as e:
         abort(404, 'users not found')
-    return jsonify({
-        'data': users}), 200
 
 
 @app_views.route('/users/<id>', methods=['DELETE'], strict_slashes=False)

@@ -7,7 +7,7 @@ from flasgger.utils import swag_from
 
 
 @app_views.route('/public-data', strict_slashes=False)
-@limiter.limit('50/hour')
+@limiter.limit('10/hour')
 @swag_from('documentation/index/index.yml')
 def index():
     """check app status"""

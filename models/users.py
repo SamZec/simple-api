@@ -61,3 +61,17 @@ class SetRole(Base):
         #self.name = kwargs.get('name')
         self.role_id = kwargs.get('role_id')
         self.user_id =  kwargs.get('user_id')
+
+def default_user():
+    """creates default root user role"""
+    from models.auth import Auth
+    auth = Auth()
+    try:
+        user = auth.register_user(first_name='admin', last_name=None,
+                email='admin@mail.com', password='55555')
+        role = Role(name='Admin')
+        role.save()
+        set_role = SetRole(user_id=user.id, role_id=role.id)
+        set_role.save()
+    except Exception:
+        return None
