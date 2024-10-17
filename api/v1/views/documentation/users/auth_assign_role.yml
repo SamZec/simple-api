@@ -3,7 +3,7 @@ Assign role to a user, 'Admin' only
 tags:
   - auth
 parameters:
-  - name: Authrization
+  - name: Authorization
     in: header
     type: string
     required: true
