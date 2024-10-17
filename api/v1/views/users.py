@@ -229,7 +229,7 @@ def update_profile():
 
 @app_views.route('/users', strict_slashes=False)
 @jwt_required()
-@auth_role(['Admin'])
+#@auth_role(['Admin'])
 @swag_from('documentation/users/users.yml')
 def get_users():
     """all users"""
