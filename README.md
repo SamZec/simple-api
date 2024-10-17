@@ -1,6 +1,6 @@
-# Simple API
+# Build a Role-Based Authentication and Authorization System
 
-Simple HTTP API for playing with `User` model with authentication, authorization and Oauth2 implementation.
+Create a backend API that implements both and using JWT for authentication and role-based access control (RBAC) for authorization.
 
 
 ## Files
