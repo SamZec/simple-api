@@ -20,6 +20,7 @@ G_SCOPE = config('G_SCOPE')
 
 
 @app_views.route('/oauth2-google', strict_slashes=False)
+@limiter.limit('3/hour')
 @swag_from('documentation/oauht2/oauth2_google.yml')
 def oauth2_google():
     """Oauth2 third party login - google"""
@@ -83,7 +84,7 @@ def google_response():
 
 @app_views.route('/oauth2-facebook', strict_slashes=False)
 @limiter.limit('3/hour')
-@swag_from('documentation/oauht2/oauth2.yml')
+#@swag_from('documentation/oauht2/oauth2.yml')
 def oauth2_facebook():
     """Oauth2 third party login - facebbok"""
     try:
