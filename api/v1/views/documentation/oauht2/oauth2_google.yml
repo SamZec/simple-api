@@ -1,0 +1,18 @@
+Third party login request 'google login implemetation'
+---
+tags:
+  - oauth2
+responses:
+  500:
+    description: request unsuccessful
+    schema:
+      type: object
+      example: {
+              error: 500,
+              msg: internal server error
+      }
+  200:
+    description: redirected to google login
+    schema:
+      type: object
+      example: {}
