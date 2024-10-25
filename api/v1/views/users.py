@@ -78,7 +78,7 @@ def auth_login():
 
 
 @app_views.route('/auth/otp-request', methods=['POST'], strict_slashes=False)
-#@limiter.limit('3/hour')
+@limiter.limit('3/hour')
 @swag_from('documentation/users/auth_otp_request.yml')
 def otp_request():
     """OTP log in request"""
