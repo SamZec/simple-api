@@ -90,7 +90,7 @@ def otp_request():
         abort(400, 'email missing')
     user = User.search({'email': email})
     if not user:
-        abort(403, 'action forbidden')
+        abort(404, 'user email not found')
     user = user[0]
     if auth.email_verification(email):
         try:
