@@ -4,9 +4,9 @@
 import os
 import jwt
 import bcrypt
-import random
+import random, ssl
 from uuid import uuid4
-from smtplib import SMTP
+from smtplib import SMTP_SSL
 from functools import wraps
 from decouple import config
 from models.users import User
@@ -16,8 +16,7 @@ from datetime import datetime, timedelta
 from flask_jwt_extended import get_jwt_identity
 
 
-SMTPserver = 'smtp.gmail.com'
-sender = 'SIMPLE API - IDEATION'
+SMTPserver = 'smtp.mail.yahoo.com'
 USER_NAME = config('USER_NAME')
 PASSWORD = config('PASSWORD')
 
@@ -114,13 +113,13 @@ class Auth:
         otp = random.randint(100000,999999)
         content = f"Your OTP Verification Code is {otp}"
         msg = MIMEText(content, 'plain')
-        msg['subject'] = "Simple-Api OTP Verification"
-        msg['from'] = sender
-        server = SMTP(SMTPserver, 587)
-        server.starttls()
-        server.login(USER_NAME, PASSWORD)
-        server.sendmail(USER_NAME, email, msg.as_string())
-        server.quit()
+        msg['subject'] = "SIMPLE API - IDEATION OTP Verification"
+        msg['from'] = USER_NAME
+        context = ssl.create_default_context()
+        with SMTP_SSL(SMTPserver, 465, context=context) as server:
+            server.login(USER_NAME, PASSWORD)
+            server.sendmail(USER_NAME, email, msg.as_string())
+            server.quit()
         return otp
 
 
